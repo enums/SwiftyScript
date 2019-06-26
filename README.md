@@ -26,7 +26,7 @@ swiftc main.swift
 
 ```swift
 // Get Infomation From Command
-let swiftTarget = "swift --version".runAsBash(printLogToConsole: false).log.components(separatedBy: "\n")[1]
+let swiftTarget = "swift --version".runAsBash(output: .log).log.components(separatedBy: "\n")[1]
 print("\(swiftTarget)")
 ```
 
@@ -62,5 +62,5 @@ let projects: [(name: String, buildTime: TimeInterval)] = [
 
 ```swift
 // Use Task
-Task.init(language: .Bash, content: "echo Bye", printTaskInfo: false).run()
+Task.init(language: .Bash, content: "echo Bye").run()
 ```
