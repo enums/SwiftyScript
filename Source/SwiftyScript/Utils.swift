@@ -25,56 +25,36 @@ public class Utils {
 public extension String {
 
     @discardableResult
-    func runAsBash(name: String? = nil,
+    func runAsBash(output: Task.Output? = nil,
+                   name: String? = nil,
                    workspace: String? = nil,
-                   autoPrintLog: Bool? = nil,
-                   autoPrintInfo: Bool? = nil,
                    logFormat: String? = nil,
-                   logInfoColor: Color? = nil,
-                   logSuccessColor: Color? = nil,
-                   logErrorColor: Color? = nil,
-                   removeLastEmptyLineWhenReadingLog: Bool? = nil,
-                   bootstrapProcessor: ((Task) -> String)? = nil,
+                   printTaskInfo: Bool? = nil,
                    configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
         return runAsScript(language: .Bash,
+                           output: output,
                            name: name,
                            workspace: workspace,
-                           autoPrintLog: autoPrintLog,
-                           autoPrintInfo: autoPrintInfo,
                            logFormat: logFormat,
-                           logInfoColor: logInfoColor,
-                           logSuccessColor: logSuccessColor,
-                           logErrorColor: logErrorColor,
-                           removeLastEmptyLineWhenReadingLog: removeLastEmptyLineWhenReadingLog,
-                           bootstrapProcessor: bootstrapProcessor,
+                           printTaskInfo: printTaskInfo,
                            configure: configure)
     }
 
     @discardableResult
     func runAsScript(language: Language,
+                     output: Task.Output? = nil,
                      name: String? = nil,
                      workspace: String? = nil,
-                     autoPrintLog: Bool? = nil,
-                     autoPrintInfo: Bool? = nil,
                      logFormat: String? = nil,
-                     logInfoColor: Color? = nil,
-                     logSuccessColor: Color? = nil,
-                     logErrorColor: Color? = nil,
-                     removeLastEmptyLineWhenReadingLog: Bool? = nil,
-                     bootstrapProcessor: ((Task) -> String)? = nil,
+                     printTaskInfo: Bool? = nil,
                      configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
         let task = Task.init(language: language,
+                             output: output,
                              name: name,
                              workspace: workspace,
                              content: self,
-                             autoPrintLog: autoPrintLog,
-                             autoPrintInfo: autoPrintInfo,
                              logFormat: logFormat,
-                             logInfoColor: logInfoColor,
-                             logSuccessColor: logSuccessColor,
-                             logErrorColor: logErrorColor,
-                             removeLastEmptyLineWhenReadingLog: removeLastEmptyLineWhenReadingLog,
-                             bootstrapProcessor: bootstrapProcessor,
+                             printTaskInfo: printTaskInfo,
                              configure: configure)
         let result = task.run()
         return (result, result == .success ? task.readLog() ?? "" : "")

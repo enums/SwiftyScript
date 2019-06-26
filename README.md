@@ -8,7 +8,7 @@ Talk to terminal.
 
 ```swift
 // Use String
-"echo Hello World".runAsBash(autoPrintLog: true)
+"echo Hello World".runAsBash()
 ```
 
 ## 0x02
@@ -19,14 +19,14 @@ Talk to terminal.
 echo 'import Foundation\nprint("Hello World From Swift")' > main.swift
 swiftc main.swift
 ./main
-""".runAsBash(autoPrintLog: true)
+""".runAsBash()
 ```
 
 ## 0x03
 
 ```swift
 // Get Infomation From Command
-let swiftTarget = "swift --version".runAsBash().log.components(separatedBy: "\n")[1]
+let swiftTarget = "swift --version".runAsBash(printLogToConsole: false).log.components(separatedBy: "\n")[1]
 print("\(swiftTarget)")
 ```
 
@@ -55,12 +55,12 @@ let projects: [(name: String, buildTime: TimeInterval)] = [
     "echo 'Done.'",
 ]
 .joinedScript()
-.runAsBash(name: "Build Project", autoPrintLog: true, autoPrintInfo: true)
+.runAsBash(name: "Build Project", printTaskInfo: true)
 ```
 
 ## 0x05
 
 ```swift
 // Use Task
-Task.init(language: .Bash, content: "echo Bye", autoPrintLog: true).run()
+Task.init(language: .Bash, content: "echo Bye", printTaskInfo: false).run()
 ```

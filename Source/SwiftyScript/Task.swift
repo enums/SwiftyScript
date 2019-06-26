@@ -9,18 +9,23 @@ import Foundation
 import Rainbow
 
 public extension Task {
-    
+
     enum ErrorType {
         case alreadyRunning
         case workspaceLocked
         case createFileFailed
         case openLogFailed
     }
-    
+
     enum Result {
         case error(ErrorType)
         case failed(Int)
         case success
+    }
+
+    enum Output {
+        case log
+        case console
     }
 
 }
@@ -37,38 +42,23 @@ public func ==(l: Task.Result, r: Task.Result) -> Bool {
 public class Task {
 
     public struct DefaultValue {
-        static var name = "Default"
-        static var workspace = "/tmp/SwiftScript"
-        static var autoPrintLog = false
-        static var autoPrintInfo = false
-        static var logFormat = ">> [%@] %@"
-        static var logErrorColor = Color.red
-        static var logInfoColor = Color.cyan
-        static var logSuccessColor = Color.green
-        static var removeLastEmptyLineWhenReadingLog = true
-        static var bootstrapProcessor: (Task) -> String = { task in
-            if task.autoPrintLog {
-                return "bash '\(task.scriptPath)' | tee '\(task.logPath)'"
-            } else {
-                return "bash '\(task.scriptPath)' > '\(task.logPath)'"
-            }
-        }
+        static public var output = Output.console
+        static public var name = "Default"
+        static public var workspace = "/tmp/SwiftScript"
+        static public var logFormat = ">> [%@] %@"
+        static public var printTaskInfo = true
+        static public var removeLastEmptyLineWhenReadingLog = true
     }
 
     public var language: Language
+    public var output: Output
     private(set) public var name: String
     private(set) public var workspace: String
     public var content: String
-    public var autoPrintLog: Bool
-    public var autoPrintInfo: Bool
     public var logFormat: String
-    public var logInfoColor: Color
-    public var logSuccessColor: Color
-    public var logErrorColor: Color
-    public var removeLastEmptyLineWhenReadingLog: Bool
+    public var printTaskInfo: Bool
     public var configure: ((String) -> String)?
-    public var bootstrapProcessor: (Task) -> String
-    
+
     public var environment = [String : String]()
 
     private(set) public var isRunning = false
@@ -85,9 +75,6 @@ public class Task {
     private var scriptPath: String {
         return "\(workspacePath)/\(name).sh"
     }
-    private var bootstrapPath: String {
-        return "\(workspacePath)/._swift_script_bootstrap_\(name).sh"
-    }
     private var lockPath: String {
         return "\(workspacePath)/.swift_script.lock"
     }
@@ -96,30 +83,20 @@ public class Task {
     }
 
     public init(language: Language,
+                output: Output? = nil,
                 name: String? = nil,
                 workspace: String? = nil,
                 content: String,
-                autoPrintLog: Bool? = nil,
-                autoPrintInfo: Bool? = nil,
                 logFormat: String? = nil,
-                logInfoColor: Color? = nil,
-                logSuccessColor: Color? = nil,
-                logErrorColor: Color? = nil,
-                removeLastEmptyLineWhenReadingLog: Bool? = nil,
-                bootstrapProcessor: ((Task) -> String)? = nil,
+                printTaskInfo: Bool? = nil,
                 configure: ((String) -> String)? = nil) {
         self.language = language
+        self.output = output ?? DefaultValue.output
         self.name = name ?? DefaultValue.name
         self.workspace = workspace ?? DefaultValue.workspace
         self.content = content
-        self.autoPrintLog = autoPrintLog ?? DefaultValue.autoPrintLog
-        self.autoPrintInfo = autoPrintInfo ?? DefaultValue.autoPrintInfo
         self.logFormat = logFormat ?? DefaultValue.logFormat
-        self.logInfoColor = logInfoColor ?? DefaultValue.logInfoColor
-        self.logSuccessColor = logSuccessColor ?? DefaultValue.logSuccessColor
-        self.logErrorColor = logErrorColor ?? DefaultValue.logErrorColor
-        self.removeLastEmptyLineWhenReadingLog = removeLastEmptyLineWhenReadingLog ?? DefaultValue.removeLastEmptyLineWhenReadingLog
-        self.bootstrapProcessor = bootstrapProcessor ?? DefaultValue.bootstrapProcessor
+        self.printTaskInfo = printTaskInfo ?? DefaultValue.printTaskInfo
         self.configure = configure
     }
 
@@ -138,7 +115,7 @@ public class Task {
             printError("Workspace is locked.".red)
             return .error(.workspaceLocked)
         }
-        
+
         func removeItemIfExist(path: String) throws {
             if fm.fileExists(atPath: path) {
                 try fm.removeItem(atPath: path)
@@ -148,7 +125,6 @@ public class Task {
         isRunning = true
         defer {
             do {
-                try removeItemIfExist(path: bootstrapPath)
                 try removeItemIfExist(path: lockPath)
             } catch {
                 printError("Failed to unlock workspace.".red)
@@ -165,11 +141,13 @@ public class Task {
                 return .error(.workspaceLocked)
             }
 
+            guard fm.createFile(atPath: logPath, contents: nil, attributes: nil) else {
+                printError("Faile to create log file.".red)
+                return .error(.createFileFailed)
+            }
+
             let configuredContent = configure?(content) ?? content
             try configuredContent.write(toFile: scriptPath, atomically: true, encoding: .utf8)
-
-            let bootstrapContent = bootstrapProcessor(self)
-            try bootstrapContent.write(toFile: bootstrapPath, atomically: true, encoding: .utf8)
         } catch {
             printError("Failed to create script file.".red)
             return .error(.createFileFailed)
@@ -177,22 +155,32 @@ public class Task {
 
         // Run
         let process = Process.init()
-        process.standardOutput = FileHandle.standardOutput
-        process.standardError = FileHandle.standardError
+
+        switch output {
+        case .log:
+            guard let logFile = FileHandle.init(forUpdatingAtPath: logPath) else {
+                printError("Faile to open log file.".red)
+                return .error(.openLogFailed)
+            }
+            process.standardOutput = logFile
+            process.standardError = logFile
+        case .console:
+            process.standardOutput = FileHandle.standardOutput
+            process.standardError = FileHandle.standardError
+        }
 
         process.currentDirectoryPath = workspacePath
         process.launchPath = language.launchPath
-        process.arguments = [bootstrapPath]
-        
+        process.arguments = [scriptPath]
+
         if process.environment == nil {
             process.environment = [:]
         }
-        
+
         if let env = language.environment {
             env.forEach { process.environment?[$0.key] = $0.value }
         }
         environment.forEach { process.environment?[$0.key] = $0.value }
-
         process.launch()
 
         printInfo("Task is running at \(process.processIdentifier)...".cyan)
@@ -200,6 +188,7 @@ public class Task {
         self.startDate = Utils.dateFormatter.string(from: Date.init())
 
         process.waitUntilExit()
+
         self.process = nil
         self.startDate = nil
 
@@ -207,7 +196,7 @@ public class Task {
 
         // Result
         guard status == 0 else {
-            printError("Task failed with code \(status) !".red)
+            printError("Task failed with code \(status)!".red)
             return .failed(Int(status))
         }
 
@@ -226,7 +215,7 @@ public class Task {
         try? fm.removeItem(atPath: workspacePath)
     }
 
-    public func readLog(removeLastEmptyLine: Bool? = nil) -> String? {
+    public func readLog() -> String? {
         guard let logFile = FileHandle.init(forReadingAtPath: logPath) else {
             printError("Faile to open log file.".red)
             return nil
@@ -234,31 +223,25 @@ public class Task {
         defer { logFile.closeFile() }
         let data = logFile.readDataToEndOfFile()
         var content = String.init(data: data, encoding: .utf8) ?? "Cannot parse the log file."
-        if removeLastEmptyLine ?? DefaultValue.removeLastEmptyLineWhenReadingLog, content.last == "\n" {
+        if DefaultValue.removeLastEmptyLineWhenReadingLog, content.last == "\n" {
             content.removeLast()
         }
         return content
     }
 
     private func printInfo(_ msg: String) {
-        guard autoPrintInfo else {
-            return
-        }
-        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).applyingColor(DefaultValue.logInfoColor))
+        guard printTaskInfo else { return }
+        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).cyan)
     }
 
     private func printError(_ msg: String) {
-        guard autoPrintInfo else {
-            return
-        }
-        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).applyingColor(DefaultValue.logErrorColor))
+        guard printTaskInfo else { return }
+        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).red)
     }
 
     private func printSuccess(_ msg: String) {
-        guard autoPrintInfo else {
-            return
-        }
-        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).applyingColor(DefaultValue.logSuccessColor))
+        guard printTaskInfo else { return }
+        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).green)
     }
 
     private func killIncludeChildIfNeed() {
@@ -267,10 +250,8 @@ public class Task {
         }
         Task.init(language: .Bash,
                   name: ".swift_script_killer_\(name)",
-                  workspace: workspace,
-                  content: "pkill -9 -P \(pid)",
-                  autoPrintLog: false,
-                  autoPrintInfo: false)
-        .run()
+            workspace: workspace,
+            content: "pkill -9 -P \(pid)").run()
     }
 }
+
