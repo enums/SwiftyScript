@@ -10,6 +10,10 @@ let package = Package(
             name: "SwiftyScriptDemo",
             targets: ["SwiftyScriptDemo"]
         ),
+        .library(
+            name: "SwiftyScript",
+            targets: ["SwiftyScript"]
+        )
     ],
     dependencies: [
         .package(url: "https://github.com/onevcat/Rainbow", from: "3.0.0")
