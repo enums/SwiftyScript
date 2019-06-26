@@ -45,7 +45,6 @@ public class Task {
         static public var output = Output.console
         static public var name = "Default"
         static public var workspace = "/tmp/SwiftScript"
-        static public var logFormat = ">> [%@] %@"
         static public var printTaskInfo = true
         static public var removeLastEmptyLineWhenReadingLog = true
     }
@@ -55,7 +54,6 @@ public class Task {
     private(set) public var name: String
     private(set) public var workspace: String
     public var content: String
-    public var logFormat: String
     public var printTaskInfo: Bool
     public var configure: ((String) -> String)?
 
@@ -87,7 +85,6 @@ public class Task {
                 name: String? = nil,
                 workspace: String? = nil,
                 content: String,
-                logFormat: String? = nil,
                 printTaskInfo: Bool? = nil,
                 configure: ((String) -> String)? = nil) {
         self.language = language
@@ -95,7 +92,6 @@ public class Task {
         self.name = name ?? DefaultValue.name
         self.workspace = workspace ?? DefaultValue.workspace
         self.content = content
-        self.logFormat = logFormat ?? DefaultValue.logFormat
         self.printTaskInfo = printTaskInfo ?? DefaultValue.printTaskInfo
         self.configure = configure
     }
@@ -231,17 +227,17 @@ public class Task {
 
     private func printInfo(_ msg: String) {
         guard printTaskInfo else { return }
-        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).cyan)
+        Utils.printLog(">> [\(name)] \(msg)".cyan)
     }
 
     private func printError(_ msg: String) {
         guard printTaskInfo else { return }
-        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).red)
+        Utils.printLog(">> [\(name)] \(msg)".red)
     }
 
     private func printSuccess(_ msg: String) {
         guard printTaskInfo else { return }
-        Utils.printLog(String.init(format: DefaultValue.logFormat, name, msg).green)
+        Utils.printLog(">> [\(name)] \(msg)".green)
     }
 
     private func killIncludeChildIfNeed() {

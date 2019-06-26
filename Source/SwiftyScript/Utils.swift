@@ -28,14 +28,12 @@ public extension String {
     func runAsBash(output: Task.Output? = nil,
                    name: String? = nil,
                    workspace: String? = nil,
-                   logFormat: String? = nil,
                    printTaskInfo: Bool? = nil,
                    configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
         return runAsScript(language: .Bash,
                            output: output,
                            name: name,
                            workspace: workspace,
-                           logFormat: logFormat,
                            printTaskInfo: printTaskInfo,
                            configure: configure)
     }
@@ -45,7 +43,6 @@ public extension String {
                      output: Task.Output? = nil,
                      name: String? = nil,
                      workspace: String? = nil,
-                     logFormat: String? = nil,
                      printTaskInfo: Bool? = nil,
                      configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
         let task = Task.init(language: language,
@@ -53,7 +50,6 @@ public extension String {
                              name: name,
                              workspace: workspace,
                              content: self,
-                             logFormat: logFormat,
                              printTaskInfo: printTaskInfo,
                              configure: configure)
         let result = task.run()
