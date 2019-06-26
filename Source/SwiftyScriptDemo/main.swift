@@ -1,38 +1,26 @@
-# SwiftyScript
+//
+//  main.swift
+//  SwiftScript
+//
+//  Created by Yuu Zheng on 2019/6/24.
+//
+import Foundation
+import SwiftyScript
 
-Talk to terminal.
-
-# Usage
-
-## 0x01
-
-```swift
 // Use String
 "echo Hello World".runAsBash(autoPrintLog: true)
-```
 
-## 0x02
-
-```swift
 // Run Other Progress
 """
 echo 'import Foundation\nprint("Hello World From Swift")' > main.swift
 swiftc main.swift
 ./main
 """.runAsBash(autoPrintLog: true)
-```
 
-## 0x03
-
-```swift
 // Get Infomation From Command
 let swiftTarget = "swift --version".runAsBash().log.components(separatedBy: "\n")[1]
 print("\(swiftTarget)")
-```
 
-## 0x04
-
-```swift
 // Build Project
 let projects: [(name: String, buildTime: TimeInterval)] = [
     ("Project A", 2.0),
@@ -56,11 +44,7 @@ let projects: [(name: String, buildTime: TimeInterval)] = [
 ]
 .joinedScript()
 .runAsBash(name: "Build Project", autoPrintLog: true, autoPrintInfo: true)
-```
 
-## 0x05
-
-```swift
 // Use Task
 Task.init(language: .Bash, content: "echo Bye", autoPrintLog: true).run()
-```
+
