@@ -21,7 +21,14 @@ public struct Language {
 
 public extension Language {
 
-    static var Bash = Language.init(launchPath: "/bin/bash", environment: ["PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin"])
-    static var Ksh = Language.init(launchPath: "/bin/ksh", environment: ["PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin"])
+    static var Bash = Language.init(launchPath: "/bin/bash", environment: [
+        "PATH": String.init(utf8String: getenv("PATH")) ?? "/usr/local/bin:/usr/bin:/bin:/usr/sbin",
+        "HOME": String.init(utf8String: getenv("HOME")) ?? "/root"
+
+    ])
+    static var Ksh = Language.init(launchPath: "/bin/ksh", environment: [
+        "PATH": String.init(utf8String: getenv("PATH")) ?? "/usr/local/bin:/usr/bin:/bin:/usr/sbin",
+        "HOME": String.init(utf8String: getenv("HOME")) ?? "/root",
+    ])
 
 }
