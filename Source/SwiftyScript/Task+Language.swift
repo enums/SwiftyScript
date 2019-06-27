@@ -20,7 +20,8 @@ public struct Language {
 }
 
 public extension Language {
-    
-    static var Bash = Language.init(launchPath: "/bin/bash")
-    
+
+    static var Bash = Language.init(launchPath: "/bin/bash", environment: ["PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin"])
+    static var Ksh = Language.init(launchPath: "/bin/ksh", environment: ["PATH": "/usr/local/bin:/usr/bin:/bin:/usr/sbin"])
+
 }
