@@ -60,7 +60,7 @@ public class Task {
     public var environment = [String : String]()
 
     private(set) public var isRunning = false
-    private(set) public var startDate: String? = nil
+    private(set) public var startDate: Date? = nil
     private var process: Process? = nil
     public var pid: Int32? {
         return process?.processIdentifier
@@ -181,9 +181,14 @@ public class Task {
 
         printInfo("Task is running at \(process.processIdentifier)...".cyan)
         self.process = process
-        self.startDate = Utils.dateFormatter.string(from: Date.init())
+        self.startDate = Date.init()
 
         process.waitUntilExit()
+
+        var duration = "unknow"
+        if let startDate = startDate {
+            duration = String.init(format: "%.02f", Date.init().timeIntervalSince1970 - startDate.timeIntervalSince1970)
+        }
 
         self.process = nil
         self.startDate = nil
@@ -192,11 +197,11 @@ public class Task {
 
         // Result
         guard status == 0 else {
-            printError("Task failed with code \(status)!".red)
+            printError("Task failed with code \(status) in \(duration)s!".red)
             return .failed(Int(status))
         }
 
-        printSuccess("Done!".green)
+        printSuccess("Done in \(duration)s!".green)
         return .success
     }
 
