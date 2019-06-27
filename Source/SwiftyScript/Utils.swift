@@ -10,7 +10,7 @@ import Rainbow
 
 public class Utils {
 
-    static var dateFormatter = { () -> DateFormatter in
+    static public var dateFormatter = { () -> DateFormatter in
         let that = DateFormatter.init()
         that.timeZone = TimeZone.init(secondsFromGMT: 8 * 3600)
         that.dateFormat = "yyyy-MM-dd HH:mm:ss"
