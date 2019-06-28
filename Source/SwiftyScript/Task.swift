@@ -101,6 +101,68 @@ public class Task {
     }
 
     @discardableResult
+    public func fastRun() -> Result {
+        guard !isRunning else {
+            printError("Task is already running.".red)
+            return .error(.alreadyRunning)
+        }
+
+        isRunning = true
+        defer { isRunning = false }
+
+        // Run
+        let pipe = Pipe.init()
+
+        let echoProcess = Process.init()
+
+        echoProcess.launchPath = "/bin/echo"
+        echoProcess.arguments = [configure?(content) ?? content]
+        echoProcess.standardOutput = pipe
+
+        let process = Process.init()
+
+        process.launchPath = language.launchPath
+        process.standardInput = pipe
+
+        if process.environment == nil {
+            process.environment = [:]
+        }
+
+        if let env = language.environment {
+            env.forEach { process.environment?[$0.key] = $0.value }
+        }
+        environment.forEach { process.environment?[$0.key] = $0.value }
+
+        echoProcess.launch()
+        process.launch()
+
+        printInfo("Task is running at \(process.processIdentifier)...".cyan)
+        self.process = process
+        self.startDate = Date.init()
+
+        process.waitUntilExit()
+
+        var duration = "unknow"
+        if let startDate = startDate {
+            duration = String.init(format: "%.02f", Date.init().timeIntervalSince1970 - startDate.timeIntervalSince1970)
+        }
+
+        self.process = nil
+        self.startDate = nil
+
+        let status = process.terminationStatus
+
+        // Result
+        guard status == 0 else {
+            printError("Task failed with code \(status) in \(duration)s!".red)
+            return .failed(Int(status))
+        }
+
+        printSuccess("Done in \(duration)s!".green)
+        return .success
+    }
+
+    @discardableResult
     public func run() -> Result {
         guard !isRunning else {
             printError("Task is already running.".red)

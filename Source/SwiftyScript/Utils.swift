@@ -25,20 +25,6 @@ public class Utils {
 public extension String {
 
     @discardableResult
-    func runAsBash(output: Task.Output? = nil,
-                   name: String? = nil,
-                   workspace: String? = nil,
-                   printTaskInfo: Bool? = nil,
-                   configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
-        return runAsScript(language: .Bash,
-                           output: output,
-                           name: name,
-                           workspace: workspace,
-                           printTaskInfo: printTaskInfo,
-                           configure: configure)
-    }
-
-    @discardableResult
     func runAsScript(language: Language,
                      output: Task.Output? = nil,
                      name: String? = nil,
@@ -53,6 +39,24 @@ public extension String {
                              printTaskInfo: printTaskInfo,
                              configure: configure)
         let result = task.run()
+        return (result, result == .success ? task.readLog() ?? "" : "")
+    }
+
+    @discardableResult
+    func fastRunAsScript(language: Language,
+                         output: Task.Output? = nil,
+                         name: String? = nil,
+                         workspace: String? = nil,
+                         printTaskInfo: Bool? = nil,
+                         configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
+        let task = Task.init(language: language,
+                             output: output,
+                             name: name,
+                             workspace: workspace,
+                             content: self,
+                             printTaskInfo: printTaskInfo,
+                             configure: configure)
+        let result = task.fastRun()
         return (result, result == .success ? task.readLog() ?? "" : "")
     }
 }

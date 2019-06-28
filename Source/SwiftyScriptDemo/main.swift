@@ -10,18 +10,24 @@ import SwiftyScript
 Task.DefaultValue.printTaskInfo = false
 
 // Use String
-"echo Hello World".runAsBash()
+"echo Hello World".fastRunAsScript(language: .Bash)
 
 // Run Other Progress
 """
 echo 'import Foundation\nprint("Hello World From Swift")' > main.swift
 swiftc main.swift
 ./main
-""".runAsBash()
+""".runAsScript(language: .Bash)
 
 // Get Infomation From Command
-let swiftTarget = "swift --version".runAsBash(output: .log).log.components(separatedBy: "\n")[1]
-print("\(swiftTarget)")
+let (result, log) = "swift --version".runAsScript(language: .Bash, output: .log)
+if result == .success {
+    let swiftTarget = log.components(separatedBy: "\n")[1]
+    print("\(swiftTarget)")
+} else {
+    print(result)
+}
+
 
 // Build Project
 let projects: [(name: String, buildTime: TimeInterval)] = [
@@ -45,7 +51,7 @@ let projects: [(name: String, buildTime: TimeInterval)] = [
     "echo 'Done.'",
 ]
 .joinedScript()
-.runAsBash(name: "Build Project", printTaskInfo: true)
+.runAsScript(language: .Bash, name: "Build Project", printTaskInfo: true)
 
 // Use Task
 Task.init(language: .Bash, content: "echo Bye").run()
