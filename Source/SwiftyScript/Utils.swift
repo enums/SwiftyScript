@@ -26,12 +26,12 @@ public extension String {
 
     @discardableResult
     func runAsScript(language: Language,
-                     output: Task.Output? = nil,
+                     output: ScriptTask.Output? = nil,
                      name: String? = nil,
                      workspace: String? = nil,
                      printTaskInfo: Bool? = nil,
-                     configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
-        let task = Task.init(language: language,
+                     configure: ((String) -> String)? = nil) -> (result: ScriptTask.Result, log: String) {
+        let task = ScriptTask.init(language: language,
                              output: output,
                              name: name,
                              workspace: workspace,
@@ -44,12 +44,12 @@ public extension String {
 
     @discardableResult
     func fastRunAsScript(language: Language,
-                         output: Task.Output? = nil,
+                         output: ScriptTask.Output? = nil,
                          name: String? = nil,
                          workspace: String? = nil,
                          printTaskInfo: Bool? = nil,
-                         configure: ((String) -> String)? = nil) -> (result: Task.Result, log: String) {
-        let task = Task.init(language: language,
+                         configure: ((String) -> String)? = nil) -> (result: ScriptTask.Result, log: String) {
+        let task = ScriptTask.init(language: language,
                              output: output,
                              name: name,
                              workspace: workspace,

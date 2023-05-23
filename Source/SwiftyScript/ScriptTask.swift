@@ -1,5 +1,5 @@
 //
-//  Task.swift
+//  ScriptTask.swift
 //  SwiftScript
 //
 //  Created by Yuu Zheng on 2019/6/24.
@@ -8,7 +8,7 @@
 import Foundation
 import Rainbow
 
-public extension Task {
+public extension ScriptTask {
 
     enum ErrorType {
         case alreadyRunning
@@ -30,7 +30,7 @@ public extension Task {
 
 }
 
-public func ==(l: Task.Result, r: Task.Result) -> Bool {
+public func ==(l: ScriptTask.Result, r: ScriptTask.Result) -> Bool {
     switch (l, r) {
     case (.success, .success): return true
     case (.failed(let l), .failed(let r)): return l == r
@@ -39,7 +39,7 @@ public func ==(l: Task.Result, r: Task.Result) -> Bool {
     }
 }
 
-public class Task {
+public class ScriptTask {
 
     public struct DefaultValue {
         static public var output = Output.console
@@ -311,7 +311,7 @@ public class Task {
         guard let pid = pid else {
             return
         }
-        Task.init(language: .Bash,
+        ScriptTask.init(language: .Bash,
                   name: ".swift_script_killer_\(name)",
             workspace: workspace,
             content: "pkill -9 -P \(pid)").run()

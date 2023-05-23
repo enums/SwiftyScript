@@ -7,7 +7,7 @@
 import Foundation
 import SwiftyScript
 
-Task.DefaultValue.printTaskInfo = false
+ScriptTask.DefaultValue.printTaskInfo = false
 
 // Use String
 "echo Hello World".fastRunAsScript(language: .Bash)
@@ -54,5 +54,5 @@ let projects: [(name: String, buildTime: TimeInterval)] = [
 .runAsScript(language: .Bash, name: "Build Project", printTaskInfo: true)
 
 // Use Task
-Task.init(language: .Bash, content: "echo Bye").run()
+ScriptTask.init(language: .Bash, content: "echo Bye").run()
 
